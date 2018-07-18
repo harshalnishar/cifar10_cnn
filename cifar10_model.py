@@ -57,16 +57,17 @@ def evaluate(logits, labels):
     accuracy, accuracy_op = tf.metrics.accuracy(labels = labels, predictions = prediction)
     return accuracy, accuracy_op
 
-def train(logits, labels):
+def train(logits, labels, learning_rate):
     """
     function to train the dnn model for cifar10 training set
     :param logits: logits tensor
     :param labels: normal (not one hot) labels tensor
+    :param learning_rate: initial learning rate
     :return: trainig operation
     """
     loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits = logits, labels = labels))
 
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate= 10e-5)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate = learning_rate)
     optimizer_step = optimizer.minimize(loss)
     return loss, optimizer_step
 

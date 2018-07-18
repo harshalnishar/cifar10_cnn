@@ -15,6 +15,7 @@ if __name__ == "__main__":
 
     BATCH_SIZE = 256
     NO_OF_EPOCHS = 1000
+    LEARNING_RATE = 10e-5
 
     image = tf.placeholder(tf.uint8)
     label = tf.placeholder(tf.int32)
@@ -25,7 +26,7 @@ if __name__ == "__main__":
     label_queue = data["label"]
 
     logits = cifar10_model.dnn(image_queue)
-    loss, train_step = cifar10_model.train(logits, label_queue)
+    loss, train_step = cifar10_model.train(logits, label_queue, LEARNING_RATE)
     accuracy = cifar10_model.evaluate(logits, label_queue)
 
     path = './dataset/cifar-10-batches-py'

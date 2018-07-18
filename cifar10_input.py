@@ -56,5 +56,3 @@ if __name__ == '__main__':
         sess.run(dataset_iterator.initializer, feed_dict = {image: image_in, label: label_in})
         data = sess.run(dataset_iterator.get_next())
         print(data)
-
-
