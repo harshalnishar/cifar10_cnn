@@ -36,6 +36,7 @@ def input_dataset(image, label, batch_size, epochs):
 
     return dataset_iterator
 
+
 if __name__ == '__main__':
 
     BATCH_SIZE = 128

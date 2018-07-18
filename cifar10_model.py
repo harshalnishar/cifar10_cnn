@@ -18,15 +18,15 @@ def dnn(image):
     image_reshape = tf.reshape(image, [-1, 32, 32, 3])
 
     conv1 = tf.layers.conv2d(image_reshape, 32, [3, 3], strides = (1, 1), padding = "same",
-                             activation = tf.nn.relu)
+                             activation = tf.nn.relu, name = 'conv2d_1')
     pool1 = tf.layers.max_pooling2d(conv1, pool_size = [2, 2], strides = 2)
 
     conv2 = tf.layers.conv2d(pool1, 64, [3, 3], strides = (1, 1), padding = "same",
-                             activation = tf.nn.relu)
+                             activation = tf.nn.relu, name = 'conv2d_2')
     pool2 = tf.layers.max_pooling2d(conv2, pool_size = [2, 2], strides = 2)
 
     pool2_flat = tf.reshape(pool2, [-1, 8 * 8 * 64])
-    fc1 = tf.layers.dense(pool2_flat, units=10)
+    fc1 = tf.layers.dense(pool2_flat, units = 10, name = 'dense_1')
 
     return fc1
 
@@ -54,8 +54,6 @@ def evaluate(logits, labels):
     :return: prediction accuracy
     """
     prediction, _ = predict(logits)
-    #match = tf.equal(labels, prediction)
-    #accuracy = tf.reduce_mean(tf.cast(match, tf.float32))
     accuracy, accuracy_op = tf.metrics.accuracy(labels = labels, predictions = prediction)
     return accuracy, accuracy_op
 
@@ -72,9 +70,9 @@ def train(logits, labels):
     optimizer_step = optimizer.minimize(loss)
     return loss, optimizer_step
 
-import cifar10_input
 
 if __name__ == "__main__":
+    import cifar10_input
 
     BATCH_SIZE = 256
     NO_OF_EPOCHS = 1000
