@@ -6,7 +6,7 @@ Author: Harshal
 """
 
 import tensorflow as tf
-from tensorflow.python.tools import inspect_checkpoint as ck
+
 
 if __name__ == "__main__":
     import cifar10_input
