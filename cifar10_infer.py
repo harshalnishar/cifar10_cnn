@@ -23,15 +23,16 @@ if __name__ == "__main__":
     with tf.device('/cpu:0'):
         logits = cifar10_model.dnn(image_queue)
         prediction, probability = cifar10_model.predict(logits)
-        #_, accuracy = cifar10_model.evaluate(logits, label_queue)
+        # _, accuracy = cifar10_model.evaluate(logits, label_queue)
 
     path = './dataset/cifar-10-batches-py'
 
     saver_handle = tf.train.Saver()
 
     with tf.Session() as sess:
-        sess.run(tf.local_variables_initializer())
         saver_handle.restore(sess, "./trained_model/model.ckpt")
+        # sess.run(tf.local_variables_initializer())
+
         cifar10_dataset = cifar10_input.unpickle(path + '/test_batch')
         image_in = cifar10_dataset[b'data']
         label_in = cifar10_dataset[b'labels']
@@ -39,4 +40,4 @@ if __name__ == "__main__":
 
         prediction_out, probability_out, actual = sess.run([prediction, probability, label_queue])
         print("Prediction: %d with Probability: %f\nActual: %d" % (prediction_out, probability_out, actual))
-        #print("Äccracy: %f" % (accuracy.eval()))
+        # print("Äccracy: %f" % (accuracy.eval()))

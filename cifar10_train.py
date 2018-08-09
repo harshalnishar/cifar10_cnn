@@ -14,7 +14,7 @@ if __name__ == "__main__":
     import cifar10_model
 
     BATCH_SIZE = 256
-    NO_OF_EPOCHS = 1000
+    NO_OF_EPOCHS = 10
     LEARNING_RATE = 10e-5
 
     image = tf.placeholder(tf.uint8)
@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     logits = cifar10_model.dnn(image_queue)
     loss, train_step = cifar10_model.train(logits, label_queue, LEARNING_RATE)
-    accuracy = cifar10_model.evaluate(logits, label_queue)
+    accuracy = cifar10_model.old_evaluate(logits, label_queue)
 
     path = './dataset/cifar-10-batches-py'
     filename_list = [(path + '/data_batch_%d' % i) for i in range(1, 6)]
@@ -36,7 +36,6 @@ if __name__ == "__main__":
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        sess.run(tf.local_variables_initializer())
 
         cifar10_dataset = cifar10_input.unpickle(filename_list[0])
         image_in = cifar10_dataset[b'data']
@@ -46,7 +45,7 @@ if __name__ == "__main__":
         count = 1
         while True:
             try:
-                loss_value, _, (_, accuracy_value) = sess.run([loss, train_step, accuracy])
+                loss_value, _, accuracy_value = sess.run([loss, train_step, accuracy])
                 if count % 100 == 0:
                     print("Step: %6d,\tLoss: %8.4f,\tAccuracy: %0.4f" % (count, loss_value, accuracy_value))
                 count += 1
@@ -55,13 +54,10 @@ if __name__ == "__main__":
 
         saver_handle.save(sess, "./trained_model/model.ckpt")
 
-        print(tf.trainable_variables(scope=None))
-
         cifar10_dataset = cifar10_input.unpickle(filename_list[1])
         image_in = cifar10_dataset[b'data']
         label_in = cifar10_dataset[b'labels']
         sess.run(dataset_iterator.initializer, feed_dict = {image: image_in, label: label_in})
 
-        sess.run(tf.local_variables_initializer())
-        _, accuracy_value = sess.run(accuracy)
+        accuracy_value = sess.run(accuracy)
         print("Accuracy: ", accuracy_value)

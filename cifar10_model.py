@@ -41,6 +41,12 @@ def predict(logits):
     return prediction, probability
 
 def old_evaluate(logits, labels):
+    """
+    function to evaluate the logits output against labels with normal accuracy
+    :param logits: logits tensor
+    :param labels: normal (not one hot) labels tensor
+    :return: prediction accuracy
+    """
     prediction, _ = predict(logits)
     match = tf.equal(labels, prediction)
     accuracy = tf.reduce_mean(tf.cast(match, tf.float32))
@@ -48,10 +54,10 @@ def old_evaluate(logits, labels):
 
 def evaluate(logits, labels):
     """
-    function to evaluate the logits output against labels
+    function to evaluate the logits output against labels with running sum accuracy
     :param logits: logits tensor
     :param labels: normal (not one hot) labels tensor
-    :return: prediction accuracy
+    :return: prediction running accuracy
     """
     prediction, _ = predict(logits)
     accuracy, accuracy_op = tf.metrics.accuracy(labels = labels, predictions = prediction)
@@ -63,7 +69,7 @@ def train(logits, labels, learning_rate):
     :param logits: logits tensor
     :param labels: normal (not one hot) labels tensor
     :param learning_rate: initial learning rate
-    :return: trainig operation
+    :return: training loss and training operation
     """
     loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits = logits, labels = labels))
 
@@ -77,34 +83,35 @@ if __name__ == "__main__":
 
     BATCH_SIZE = 256
     NO_OF_EPOCHS = 1000
+    LEARNING_RATE = 10e-5
 
     image = tf.placeholder(tf.uint8)
     label = tf.placeholder(tf.int32)
 
     dataset_iterator = cifar10_input.input_dataset(image, label, BATCH_SIZE, NO_OF_EPOCHS)
     data = dataset_iterator.get_next()
-
     image_queue = data["features"]
     label_queue = data["label"]
 
     logits = dnn(image_queue)
-    loss, train_step = train(logits, label_queue)
-    accuracy = evaluate(logits, label_queue)
+    loss, train_step = train(logits, label_queue, LEARNING_RATE)
+    accuracy = old_evaluate(logits, label_queue)
 
     path = './dataset/cifar-10-batches-py'
     filename_list = [(path + '/data_batch_%d' % i) for i in range(1, 6)]
-    cifar10_dataset = cifar10_input.unpickle(filename_list[0])
-    image_in = cifar10_dataset[b'data']
-    label_in = cifar10_dataset[b'labels']
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        sess.run(tf.local_variables_initializer())
+
+        cifar10_dataset = cifar10_input.unpickle(filename_list[0])
+        image_in = cifar10_dataset[b'data']
+        label_in = cifar10_dataset[b'labels']
         sess.run(dataset_iterator.initializer, feed_dict = {image: image_in, label: label_in})
+
         count = 1
         while True:
             try:
-                loss_value, _, (_, accuracy_value) = sess.run([loss, train_step, accuracy])
+                loss_value, _, accuracy_value = sess.run([loss, train_step, accuracy])
                 if count % 100 == 0:
                     print("Step: %6d,\tLoss: %8.4f,\tAccuracy: %0.4f" % (count, loss_value, accuracy_value))
                 count += 1
@@ -115,7 +122,6 @@ if __name__ == "__main__":
         image_in = cifar10_dataset[b'data']
         label_in = cifar10_dataset[b'labels']
 
-        sess.run(tf.local_variables_initializer())
         sess.run(dataset_iterator.initializer, feed_dict = {image: image_in, label: label_in})
-        _, accuracy_value = sess.run(accuracy)
+        accuracy_value = sess.run(accuracy)
         print("Accuracy: ", accuracy_value)
