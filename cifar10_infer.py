@@ -30,7 +30,7 @@ if __name__ == "__main__":
     saver_handle = tf.train.Saver()
 
     with tf.Session() as sess:
-        saver_handle.restore(sess, "./trained_model/model.ckpt")
+        saver_handle.restore(sess, tf.train.latest_checkpoint('./trained_model'))
         # sess.run(tf.local_variables_initializer())
 
         cifar10_dataset = cifar10_input.unpickle(path + '/test_batch')
