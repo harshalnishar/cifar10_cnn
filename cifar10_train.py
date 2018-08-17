@@ -25,17 +25,19 @@ if __name__ == "__main__":
     image_queue = data["features"]
     label_queue = data["label"]
 
+    step = tf.train.get_or_create_global_step()
     logits = cifar10_model.dnn(image_queue)
-    loss, train_step = cifar10_model.train(logits, label_queue, LEARNING_RATE)
+    loss, train_step = cifar10_model.train(logits, label_queue, LEARNING_RATE, step)
     accuracy = cifar10_model.old_evaluate(logits, label_queue)
 
     path = './dataset/cifar-10-batches-py'
     filename_list = [(path + '/data_batch_%d' % i) for i in range(1, 6)]
 
-    saver_handle = tf.train.Saver()
-
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+    session_args = {
+        'checkpoint_dir': './trained_model',
+        'save_checkpoint_steps': 300
+    }
+    with tf.train.MonitoredTrainingSession(**session_args) as sess:
 
         cifar10_dataset = cifar10_input.unpickle(filename_list[0])
         image_in = cifar10_dataset[b'data']
@@ -51,8 +53,6 @@ if __name__ == "__main__":
                 count += 1
             except tf.errors.OutOfRangeError:
                 break
-
-        saver_handle.save(sess, "./trained_model/model.ckpt")
 
         cifar10_dataset = cifar10_input.unpickle(filename_list[1])
         image_in = cifar10_dataset[b'data']

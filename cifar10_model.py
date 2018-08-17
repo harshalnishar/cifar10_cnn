@@ -63,7 +63,7 @@ def evaluate(logits, labels):
     accuracy, accuracy_op = tf.metrics.accuracy(labels = labels, predictions = prediction)
     return accuracy, accuracy_op
 
-def train(logits, labels, learning_rate):
+def train(logits, labels, learning_rate, step):
     """
     function to train the dnn model for cifar10 training set
     :param logits: logits tensor
@@ -74,7 +74,7 @@ def train(logits, labels, learning_rate):
     loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits = logits, labels = labels))
 
     optimizer = tf.train.GradientDescentOptimizer(learning_rate = learning_rate)
-    optimizer_step = optimizer.minimize(loss)
+    optimizer_step = optimizer.minimize(loss, global_step = step)
     return loss, optimizer_step
 
 
@@ -93,8 +93,9 @@ if __name__ == "__main__":
     image_queue = data["features"]
     label_queue = data["label"]
 
+    step = tf.train.get_or_create_global_step()
     logits = dnn(image_queue)
-    loss, train_step = train(logits, label_queue, LEARNING_RATE)
+    loss, train_step = train(logits, label_queue, LEARNING_RATE, step)
     accuracy = old_evaluate(logits, label_queue)
 
     path = './dataset/cifar-10-batches-py'
