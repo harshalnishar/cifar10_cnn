@@ -14,9 +14,11 @@ if __name__ == "__main__":
     import cifar10_model
 
     BATCH_SIZE = 256
-    NO_OF_EPOCHS = 10
-    LEARNING_RATE = 10e-5
-    LAMBDA = 0.5
+    NO_OF_EPOCHS = 100
+    INITIAL_LEARNING_RATE = 10e-5
+    DECAY_STEP = 10000
+    DECAY_RATE = 0.1
+    LAMBDA = 0.01
 
     image = tf.placeholder(tf.uint8)
     label = tf.placeholder(tf.int32)
@@ -27,8 +29,9 @@ if __name__ == "__main__":
     label_queue = data["label"]
 
     step = tf.train.get_or_create_global_step()
+    learning_rate = tf.train.exponential_decay(INITIAL_LEARNING_RATE, step, DECAY_STEP, DECAY_RATE, staircase = True)
     logits = cifar10_model.dnn(image_queue)
-    loss, train_step = cifar10_model.train(logits, label_queue, LEARNING_RATE, LAMBDA, step)
+    loss, train_step = cifar10_model.train(logits, label_queue, learning_rate, LAMBDA, step)
     accuracy = cifar10_model.old_evaluate(logits, label_queue)
 
     path = './dataset/cifar-10-batches-py'
@@ -49,9 +52,10 @@ if __name__ == "__main__":
 
             while True:
                 try:
-                    loss_value, _, accuracy_value = sess.run([loss, train_step, accuracy])
+                    loss_value, _, lr_value, accuracy_value = sess.run([loss, train_step, learning_rate, accuracy])
                     if count % 100 == 0:
-                        print("Step: %6d,\tLoss: %8.4f,\tAccuracy: %0.4f" % (count, loss_value, accuracy_value))
+                        print("Step: %6d,\t Learning rate: %e,\tLoss: %8.4f,\tAccuracy: %0.4f" %
+                              (count, lr_value, loss_value, accuracy_value))
                     count += 1
                 except tf.errors.OutOfRangeError:
                     break
