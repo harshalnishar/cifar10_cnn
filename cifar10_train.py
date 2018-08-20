@@ -16,6 +16,7 @@ if __name__ == "__main__":
     BATCH_SIZE = 256
     NO_OF_EPOCHS = 10
     LEARNING_RATE = 10e-5
+    LAMBDA = 0.5
 
     image = tf.placeholder(tf.uint8)
     label = tf.placeholder(tf.int32)
@@ -27,7 +28,7 @@ if __name__ == "__main__":
 
     step = tf.train.get_or_create_global_step()
     logits = cifar10_model.dnn(image_queue)
-    loss, train_step = cifar10_model.train(logits, label_queue, LEARNING_RATE, step)
+    loss, train_step = cifar10_model.train(logits, label_queue, LEARNING_RATE, LAMBDA, step)
     accuracy = cifar10_model.old_evaluate(logits, label_queue)
 
     path = './dataset/cifar-10-batches-py'
@@ -39,22 +40,23 @@ if __name__ == "__main__":
     }
     with tf.train.MonitoredTrainingSession(**session_args) as sess:
 
-        cifar10_dataset = cifar10_input.unpickle(filename_list[0])
-        image_in = cifar10_dataset[b'data']
-        label_in = cifar10_dataset[b'labels']
-        sess.run(dataset_iterator.initializer, feed_dict = {image: image_in, label: label_in})
-
         count = 1
-        while True:
-            try:
-                loss_value, _, accuracy_value = sess.run([loss, train_step, accuracy])
-                if count % 100 == 0:
-                    print("Step: %6d,\tLoss: %8.4f,\tAccuracy: %0.4f" % (count, loss_value, accuracy_value))
-                count += 1
-            except tf.errors.OutOfRangeError:
-                break
+        for i in range(5):
+            cifar10_dataset = cifar10_input.unpickle(filename_list[i])
+            image_in = cifar10_dataset[b'data']
+            label_in = cifar10_dataset[b'labels']
+            sess.run(dataset_iterator.initializer, feed_dict = {image: image_in, label: label_in})
 
-        cifar10_dataset = cifar10_input.unpickle(filename_list[1])
+            while True:
+                try:
+                    loss_value, _, accuracy_value = sess.run([loss, train_step, accuracy])
+                    if count % 100 == 0:
+                        print("Step: %6d,\tLoss: %8.4f,\tAccuracy: %0.4f" % (count, loss_value, accuracy_value))
+                    count += 1
+                except tf.errors.OutOfRangeError:
+                    break
+
+        cifar10_dataset = cifar10_input.unpickle(path + '/test_batch')
         image_in = cifar10_dataset[b'data']
         label_in = cifar10_dataset[b'labels']
         sess.run(dataset_iterator.initializer, feed_dict = {image: image_in, label: label_in})

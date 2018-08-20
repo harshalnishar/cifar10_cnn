@@ -63,7 +63,7 @@ def evaluate(logits, labels):
     accuracy, accuracy_op = tf.metrics.accuracy(labels = labels, predictions = prediction)
     return accuracy, accuracy_op
 
-def train(logits, labels, learning_rate, step):
+def train(logits, labels, learning_rate, l2_regularization, step):
     """
     function to train the dnn model for cifar10 training set
     :param logits: logits tensor
@@ -71,8 +71,9 @@ def train(logits, labels, learning_rate, step):
     :param learning_rate: initial learning rate
     :return: training loss and training operation
     """
-    loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits = logits, labels = labels))
-
+    loss_entropy = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits = logits, labels = labels))
+    loss_l2 = tf.reduce_mean([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name])
+    loss = loss_entropy + l2_regularization * loss_l2
     optimizer = tf.train.GradientDescentOptimizer(learning_rate = learning_rate)
     optimizer_step = optimizer.minimize(loss, global_step = step)
     return loss, optimizer_step
@@ -84,6 +85,7 @@ if __name__ == "__main__":
     BATCH_SIZE = 256
     NO_OF_EPOCHS = 1000
     LEARNING_RATE = 10e-5
+    LAMBDA = 0.5
 
     image = tf.placeholder(tf.uint8)
     label = tf.placeholder(tf.int32)
@@ -95,7 +97,7 @@ if __name__ == "__main__":
 
     step = tf.train.get_or_create_global_step()
     logits = dnn(image_queue)
-    loss, train_step = train(logits, label_queue, LEARNING_RATE, step)
+    loss, train_step = train(logits, label_queue, LEARNING_RATE, LAMBDA, step)
     accuracy = old_evaluate(logits, label_queue)
 
     path = './dataset/cifar-10-batches-py'
@@ -119,7 +121,10 @@ if __name__ == "__main__":
             except tf.errors.OutOfRangeError:
                 break
 
-        cifar10_dataset = cifar10_input.unpickle(filename_list[1])
+        variables = [v.name for v in tf.trainable_variables()]
+        print(variables)
+
+        cifar10_dataset = cifar10_input.unpickle(path + '/test_batch')
         image_in = cifar10_dataset[b'data']
         label_in = cifar10_dataset[b'labels']
 
