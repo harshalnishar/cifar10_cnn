@@ -7,7 +7,7 @@ Author: Harshal
 """
 
 import tensorflow as tf
-
+from random import shuffle
 
 if __name__ == "__main__":
     import cifar10_input
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     image = tf.placeholder(tf.uint8)
     label = tf.placeholder(tf.int32)
 
-    dataset_iterator = cifar10_input.input_dataset(image, label, BATCH_SIZE, NO_OF_EPOCHS)
+    dataset_iterator = cifar10_input.input_dataset(image, label, BATCH_SIZE, 1)
     data = dataset_iterator.get_next()
     image_queue = data["features"]
     label_queue = data["label"]
@@ -44,21 +44,24 @@ if __name__ == "__main__":
     with tf.train.MonitoredTrainingSession(**session_args) as sess:
 
         count = 1
-        for i in range(5):
-            cifar10_dataset = cifar10_input.unpickle(filename_list[i])
-            image_in = cifar10_dataset[b'data']
-            label_in = cifar10_dataset[b'labels']
-            sess.run(dataset_iterator.initializer, feed_dict = {image: image_in, label: label_in})
+        for epoch in range(NO_OF_EPOCHS):
+            l = list(range(5))
+            shuffle(l)
+            for i in l:
+                cifar10_dataset = cifar10_input.unpickle(filename_list[i])
+                image_in = cifar10_dataset[b'data']
+                label_in = cifar10_dataset[b'labels']
+                sess.run(dataset_iterator.initializer, feed_dict = {image: image_in, label: label_in})
 
-            while True:
-                try:
-                    loss_value, _, lr_value, accuracy_value = sess.run([loss, train_step, learning_rate, accuracy])
-                    if count % 100 == 0:
-                        print("Step: %6d,\t Learning rate: %e,\tLoss: %8.4f,\tAccuracy: %0.4f" %
-                              (count, lr_value, loss_value, accuracy_value))
-                    count += 1
-                except tf.errors.OutOfRangeError:
-                    break
+                while True:
+                    try:
+                        loss_value, _, lr_value, accuracy_value = sess.run([loss, train_step, learning_rate, accuracy])
+                        if count % 100 == 0:
+                            print("Step: %6d,\tEpoch: %4d,\tLearning Rate: %e,\tLoss: %8.4f,\tAccuracy: %0.4f" %
+                                  (count, epoch, lr_value, loss_value, accuracy_value))
+                        count += 1
+                    except tf.errors.OutOfRangeError:
+                        break
 
         cifar10_dataset = cifar10_input.unpickle(path + '/test_batch')
         image_in = cifar10_dataset[b'data']

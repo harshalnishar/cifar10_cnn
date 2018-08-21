@@ -71,9 +71,10 @@ def train(logits, labels, learning_rate, l2_regularization, step):
     :param learning_rate: initial learning rate
     :return: training loss and training operation
     """
-    loss_entropy = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits = logits, labels = labels))
-    loss_l2 = tf.reduce_mean([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name])
-    loss = loss_entropy + l2_regularization * loss_l2
+    loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits = logits, labels = labels))
+    if l2_regularization is not None:
+        loss_l2 = tf.reduce_mean([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name])
+        loss = loss + l2_regularization * loss_l2
     optimizer = tf.train.GradientDescentOptimizer(learning_rate = learning_rate)
     optimizer_step = optimizer.minimize(loss, global_step = step)
     return loss, optimizer_step
