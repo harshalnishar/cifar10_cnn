@@ -14,7 +14,7 @@ def dnn(image):
     :return: model output tensor node
     """
 
-    image = tf.cast(image, tf.float32)
+    image = tf.cast(image, tf.float64)
     image_reshape = tf.reshape(image, [-1, 32, 32, 3])
 
     conv1 = tf.layers.conv2d(image_reshape, 32, [3, 3], strides = (1, 1), padding = "same",
@@ -26,9 +26,11 @@ def dnn(image):
     pool2 = tf.layers.max_pooling2d(conv2, pool_size = [2, 2], strides = 2)
 
     pool2_flat = tf.reshape(pool2, [-1, 8 * 8 * 64])
-    fc1 = tf.layers.dense(pool2_flat, units = 10, name = 'dense_1')
+    fc1 = tf.layers.dense(pool2_flat, units = 128, name = 'dense_1')
 
-    return fc1
+    fc2 = tf.layers.dense(fc1, 10, name = 'dense_2')
+
+    return fc2
 
 def predict(logits):
     """
@@ -72,6 +74,7 @@ def train(logits, labels, learning_rate, l2_regularization, step):
     :return: training loss and training operation
     """
     loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits = logits, labels = labels))
+    tf.cast(loss, dtype = tf.float64)
     if l2_regularization is not None:
         loss_l2 = tf.reduce_mean([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name])
         loss = loss + l2_regularization * loss_l2

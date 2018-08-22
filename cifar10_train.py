@@ -16,8 +16,8 @@ if __name__ == "__main__":
     BATCH_SIZE = 256
     NO_OF_EPOCHS = 100
     INITIAL_LEARNING_RATE = 10e-5
-    DECAY_STEP = 10000
-    DECAY_RATE = 0.1
+    DECAY_STEP = 5000
+    DECAY_RATE = 0.2
     LAMBDA = 0.01
 
     image = tf.placeholder(tf.uint8)
