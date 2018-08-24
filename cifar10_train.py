@@ -10,6 +10,7 @@ import tensorflow as tf
 import numpy as np
 from random import shuffle
 
+
 if __name__ == "__main__":
     import cifar10_input
     import cifar10_model
