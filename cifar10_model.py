@@ -7,7 +7,7 @@ Author: Harshal
 
 import tensorflow as tf
 
-def dnn(image):
+def dnn(image, mean, variance):
     """
     function defining cifar10 model
     :param image: input image tensor
@@ -17,7 +17,9 @@ def dnn(image):
     image = tf.cast(image, tf.float64)
     image_reshape = tf.reshape(image, [-1, 32, 32, 3])
 
-    conv1 = tf.layers.conv2d(image_reshape, 32, [3, 3], strides = (1, 1), padding = "same",
+    image_norm = tf.nn.batch_normalization(image_reshape, mean, variance, None, None, 0.0001)
+
+    conv1 = tf.layers.conv2d(image_norm, 32, [3, 3], strides = (1, 1), padding = "same",
                              activation = tf.nn.relu, name = 'conv2d_1')
     pool1 = tf.layers.max_pooling2d(conv1, pool_size = [2, 2], strides = 2)
 
@@ -100,7 +102,7 @@ if __name__ == "__main__":
     label_queue = data["label"]
 
     step = tf.train.get_or_create_global_step()
-    logits = dnn(image_queue)
+    logits = dnn(image_queue, 0, 1)
     loss, train_step = train(logits, label_queue, LEARNING_RATE, LAMBDA, step)
     accuracy = old_evaluate(logits, label_queue)
 
