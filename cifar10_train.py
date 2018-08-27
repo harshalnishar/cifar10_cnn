@@ -9,7 +9,7 @@ Author: Harshal
 import tensorflow as tf
 import numpy as np
 from random import shuffle
-
+import os
 
 if __name__ == "__main__":
     import cifar10_input
@@ -17,9 +17,9 @@ if __name__ == "__main__":
 
     BATCH_SIZE = 256
     NO_OF_EPOCHS = 10000
-    INITIAL_LEARNING_RATE = 0.2
+    INITIAL_LEARNING_RATE = 0.1
     DECAY_STEP = 1000
-    DECAY_RATE = 0.2
+    DECAY_RATE = 0.1
     LAMBDA = 0.01
 
     path = './dataset/cifar-10-batches-py'
@@ -30,6 +30,7 @@ if __name__ == "__main__":
         image_all = np.append(image_all, cifar10_dataset[b'data'].reshape((-1, 32, 32, 3)), axis = 0)
     mean = image_all.mean(axis = (0, 1, 2))
     variance = image_all.var(axis = (0, 1 ,2))
+    os.makedirs('./trained_model', exist_ok = True)
     np.savetxt('./trained_model/mean.txt', mean)
     np.savetxt('./trained_model/variance.txt', variance)
 
