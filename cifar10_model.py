@@ -23,14 +23,23 @@ def dnn(image, mean, variance):
                              activation = tf.nn.relu, name = 'conv2d_1')
     pool1 = tf.layers.max_pooling2d(conv1, pool_size = [2, 2], strides = 2)
 
-    conv2 = tf.layers.conv2d(pool1, 64, [3, 3], strides = (1, 1), padding = "same",
+    mean1, variance1 = tf.nn.moments(pool1, axes = [0, 1, 2])
+    pool1_norm = tf.nn.batch_normalization(pool1, mean1, variance1, None, None, 0.0001)
+
+    conv2 = tf.layers.conv2d(pool1_norm, 64, [3, 3], strides = (1, 1), padding = "same",
                              activation = tf.nn.relu, name = 'conv2d_2')
     pool2 = tf.layers.max_pooling2d(conv2, pool_size = [2, 2], strides = 2)
 
-    pool2_flat = tf.reshape(pool2, [-1, 8 * 8 * 64])
+    mean2, variance2 = tf.nn.moments(pool2, axes = [0, 1, 2])
+    pool2_norm = tf.nn.batch_normalization(pool2, mean2, variance2, None, None, 0.0001)
+
+    pool2_flat = tf.reshape(pool2_norm, [-1, 8 * 8 * 64])
     fc1 = tf.layers.dense(pool2_flat, units = 128, name = 'dense_1')
 
-    fc2 = tf.layers.dense(fc1, 10, name = 'dense_2')
+    mean3, variance3 = tf.nn.moments(fc1, axes = [0])
+    fc1_norm = tf.nn.batch_normalization(fc1, mean3, variance3, None, None, 0.0001)
+
+    fc2 = tf.layers.dense(fc1_norm, 10, name = 'dense_2')
 
     return fc2
 
