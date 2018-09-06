@@ -16,11 +16,11 @@ if __name__ == "__main__":
     import cifar10_model
 
     BATCH_SIZE = 256
-    NO_OF_EPOCHS = 10000
-    INITIAL_LEARNING_RATE = 0.1
-    DECAY_STEP = 1000
-    DECAY_RATE = 0.1
-    LAMBDA = 0.01
+    NO_OF_EPOCHS = 30
+    INITIAL_LEARNING_RATE = 0.01
+    DECAY_STEP = 2000
+    DECAY_RATE = 0.5
+    LAMBDA = None #0.01
 
     path = './dataset/cifar-10-batches-py'
     filename_list = [(path + '/data_batch_%d' % i) for i in range(1, 6)]
@@ -29,7 +29,7 @@ if __name__ == "__main__":
         cifar10_dataset = cifar10_input.unpickle(filename_list[i])
         image_all = np.append(image_all, cifar10_dataset[b'data'].reshape((-1, 32, 32, 3)), axis = 0)
     mean = image_all.mean(axis = (0, 1, 2))
-    variance = image_all.var(axis = (0, 1 ,2))
+    variance = image_all.var(axis = (0, 1, 2))
     os.makedirs('./trained_model', exist_ok = True)
     np.savetxt('./trained_model/mean.txt', mean)
     np.savetxt('./trained_model/variance.txt', variance)
