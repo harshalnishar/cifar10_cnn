@@ -14,7 +14,7 @@ def dnn(image, mean, variance):
     :return: model output tensor node
     """
 
-    image = tf.cast(image, tf.float64)
+    image = tf.cast(image, tf.float32)
     image_reshape = tf.reshape(image, [-1, 32, 32, 3])
 
     image_norm = tf.nn.batch_normalization(image_reshape, mean, variance, None, None, 0.0001)
@@ -76,12 +76,15 @@ def evaluate(logits, labels):
     accuracy, accuracy_op = tf.metrics.accuracy(labels = labels, predictions = prediction)
     return accuracy, accuracy_op
 
-def train(logits, labels, learning_rate, l2_regularization, step):
+def train(logits, labels, learning_rate, l2_regularization, step, train_var):
     """
     function to train the dnn model for cifar10 training set
     :param logits: logits tensor
     :param labels: normal (not one hot) labels tensor
-    :param learning_rate: initial learning rate
+    :param learning_rate: initial learning rate or learning rate function
+    :param l2_regularization: regularization factor
+    :param step: global training step needed for learning rate function
+    :param train_var: list of tensor variables which must be used for minimization
     :return: training loss and training operation
     """
     loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits = logits, labels = labels))
@@ -90,7 +93,7 @@ def train(logits, labels, learning_rate, l2_regularization, step):
         loss_l2 = tf.reduce_mean([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name])
         loss = loss + l2_regularization * loss_l2
     optimizer = tf.train.GradientDescentOptimizer(learning_rate = learning_rate)
-    optimizer_step = optimizer.minimize(loss, global_step = step)
+    optimizer_step = optimizer.minimize(loss, global_step = step, var_list = train_var)
     return loss, optimizer_step
 
 
@@ -111,8 +114,8 @@ if __name__ == "__main__":
     label_queue = data["label"]
 
     step = tf.train.get_or_create_global_step()
-    logits = dnn(image_queue, 0, 1)
-    loss, train_step = train(logits, label_queue, LEARNING_RATE, LAMBDA, step)
+    logits = dnn(image_queue, 0.0, 1.0)
+    loss, train_step = train(logits, label_queue, LEARNING_RATE, LAMBDA, step, tf.trainable_variables())
     accuracy = old_evaluate(logits, label_queue)
 
     path = './dataset/cifar-10-batches-py'
