@@ -33,8 +33,15 @@ def dnn(image, mean, variance):
     mean2, variance2 = tf.nn.moments(pool2, axes = [0, 1, 2])
     pool2_norm = tf.nn.batch_normalization(pool2, mean2, variance2, None, None, 0.0001)
 
-    pool2_flat = tf.reshape(pool2_norm, [-1, 8 * 8 * 64])
-    fc1 = tf.layers.dense(pool2_flat, units = 128, name = 'dense_1')
+    conv3 = tf.layers.conv2d(pool2_norm, 128, [3, 3], strides = (1, 1), padding = "same",
+                             activation = tf.nn.relu, name = 'conv2d_3')
+    pool3 = tf.layers.max_pooling2d(conv3, pool_size = [2, 2], strides = 2)
+
+    mean3, variance3 = tf.nn.moments(pool3, axes = [0, 1, 2])
+    pool3_norm = tf.nn.batch_normalization(pool3, mean3, variance3, None, None, 0.0001)
+
+    pool3_flat = tf.reshape(pool3_norm, [-1, 4 * 4 * 128])
+    fc1 = tf.layers.dense(pool3_flat, units = 64, name = 'dense_1')
 
     mean3, variance3 = tf.nn.moments(fc1, axes = [0])
     fc1_norm = tf.nn.batch_normalization(fc1, mean3, variance3, None, None, 0.0001)
@@ -88,12 +95,13 @@ def train(logits, labels, learning_rate, l2_regularization, step, train_var):
     :return: training loss and training operation
     """
     loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits = logits, labels = labels))
+    cost = tf.identity(loss)
     tf.cast(loss, dtype = tf.float64)
     if l2_regularization is not None:
         loss_l2 = tf.reduce_mean([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name])
-        loss = loss + l2_regularization * loss_l2
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate = learning_rate)
-    optimizer_step = optimizer.minimize(loss, global_step = step, var_list = train_var)
+        cost = cost + l2_regularization * loss_l2
+    optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate)
+    optimizer_step = optimizer.minimize(cost, global_step = step, var_list = train_var)
     return loss, optimizer_step
 
 

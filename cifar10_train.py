@@ -16,11 +16,11 @@ if __name__ == "__main__":
     import cifar10_model
 
     BATCH_SIZE = 256
-    NO_OF_EPOCHS = 300
+    NO_OF_EPOCHS = 30
     INITIAL_LEARNING_RATE = 0.01
     DECAY_STEP = 2000
     DECAY_RATE = 0.5
-    LAMBDA = None #0.01
+    LAMBDA = 0.01
 
     path = './dataset/cifar-10-batches-py'
     filename_list = [(path + '/data_batch_%d' % i) for i in range(1, 6)]
@@ -44,13 +44,19 @@ if __name__ == "__main__":
 
     step = tf.train.get_or_create_global_step()
     learning_rate = tf.train.exponential_decay(INITIAL_LEARNING_RATE, step, DECAY_STEP, DECAY_RATE, staircase = True)
-    logits = cifar10_model.dnn(image_queue, mean, variance)
-    loss, train_step = cifar10_model.train(logits, label_queue, learning_rate, LAMBDA, step, tf.trainable_variables())
-    accuracy = cifar10_model.old_evaluate(logits, label_queue)
 
+    with tf.device('/gpu:0'):
+        logits = cifar10_model.dnn(image_queue, mean, variance)
+        loss, train_step = cifar10_model.train(logits, label_queue, learning_rate, LAMBDA, step, tf.trainable_variables())
+        accuracy = cifar10_model.old_evaluate(logits, label_queue)
+
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    config.log_device_placement = True
     session_args = {
         'checkpoint_dir': './trained_model',
-        'save_checkpoint_steps': 300
+        'save_checkpoint_steps': 300,
+        'config': config
     }
     with tf.train.MonitoredTrainingSession(**session_args) as sess:
 
