@@ -7,10 +7,10 @@ Author: Harshal
 
 import tensorflow as tf
 
-def dnn(image, mean, variance):
+def dnn(image, mean, variance, phase):
     """
     function defining cifar10 model
-    :param image: input image tensor
+    :param image: input image tensor in the flattened form
     :return: model output tensor node
     """
 
@@ -19,36 +19,149 @@ def dnn(image, mean, variance):
 
     image_norm = tf.nn.batch_normalization(image_reshape, mean, variance, None, None, 0.0001)
 
-    conv1 = tf.layers.conv2d(image_norm, 32, [3, 3], strides = (1, 1), padding = "same",
-                             activation = tf.nn.relu, name = 'conv2d_1')
-    pool1 = tf.layers.max_pooling2d(conv1, pool_size = [2, 2], strides = 2)
 
-    mean1, variance1 = tf.nn.moments(pool1, axes = [0, 1, 2])
-    pool1_norm = tf.nn.batch_normalization(pool1, mean1, variance1, None, None, 0.0001)
+    conv1 = tf.layers.conv2d(image_norm, 16, [5, 5], strides = (1, 1), padding = "same",
+                             activation = None, name = 'conv2d_1')
+    #mean1, variance1 = tf.nn.moments(pool1, axes = [0, 1, 2])
+    conv1_norm = tf.layers.batch_normalization(
+        conv1,
+        #axis = 3,
+        momentum = 0.99,
+        epsilon = 0.001,
+        center = True,
+        scale = True,
+        training = phase,
+        trainable = True
+    )
+    relu1 = tf.nn.relu(conv1_norm)
+    #relu1 = tf.nn.relu(conv1)
+    
+    conv1_1 = tf.layers.conv2d(relu1, 16, [5, 5], strides = (1, 1), padding = "same",
+                             activation = None, name = 'conv2d_1_1')
+    #mean1, variance1 = tf.nn.moments(pool1, axes = [0, 1, 2])
+    conv1_1_norm = tf.layers.batch_normalization(
+        conv1_1,
+        #axis = 3,
+        momentum = 0.99,
+        epsilon = 0.001,
+        center = True,
+        scale = True,
+        training = phase,
+        trainable = True
+    )
+    relu1_1 = tf.nn.relu(conv1_1_norm)
 
-    conv2 = tf.layers.conv2d(pool1_norm, 64, [3, 3], strides = (1, 1), padding = "same",
-                             activation = tf.nn.relu, name = 'conv2d_2')
-    pool2 = tf.layers.max_pooling2d(conv2, pool_size = [2, 2], strides = 2)
+    pool1 = tf.layers.max_pooling2d(relu1_1, pool_size = [2, 2], strides = 2)
 
-    mean2, variance2 = tf.nn.moments(pool2, axes = [0, 1, 2])
-    pool2_norm = tf.nn.batch_normalization(pool2, mean2, variance2, None, None, 0.0001)
 
-    conv3 = tf.layers.conv2d(pool2_norm, 128, [3, 3], strides = (1, 1), padding = "same",
-                             activation = tf.nn.relu, name = 'conv2d_3')
-    pool3 = tf.layers.max_pooling2d(conv3, pool_size = [2, 2], strides = 2)
+    conv2 = tf.layers.conv2d(pool1, 32, [5, 5], strides = (1, 1), padding = "same",
+                             activation = None, name = 'conv2d_2')
+    conv2_norm = tf.layers.batch_normalization(
+        conv2,
+        #axis = 3,
+        momentum = 0.99,
+        epsilon = 0.001,
+        center = True,
+        scale = True,
+        training = phase,
+        trainable = True
+    )
+    relu2 = tf.nn.relu(conv2_norm)
+    #relu2 = tf.nn.relu(conv2)
 
-    mean3, variance3 = tf.nn.moments(pool3, axes = [0, 1, 2])
-    pool3_norm = tf.nn.batch_normalization(pool3, mean3, variance3, None, None, 0.0001)
+    conv2_1 = tf.layers.conv2d(relu2, 32, [3, 3], strides = (1, 1), padding = "same",
+                             activation = None, name = 'conv2d_2_1')
+    conv2_1_norm = tf.layers.batch_normalization(
+        conv2_1,
+        #axis = 3,
+        momentum = 0.99,
+        epsilon = 0.001,
+        center = True,
+        scale = True,
+        training = phase,
+        trainable = True
+    )
+    relu2_1 = tf.nn.relu(conv2_1_norm)
+    
+    pool2 = tf.layers.max_pooling2d(relu2_1, pool_size = [2, 2], strides = 2)
 
-    pool3_flat = tf.reshape(pool3_norm, [-1, 4 * 4 * 128])
-    fc1 = tf.layers.dense(pool3_flat, units = 64, name = 'dense_1')
 
-    mean3, variance3 = tf.nn.moments(fc1, axes = [0])
-    fc1_norm = tf.nn.batch_normalization(fc1, mean3, variance3, None, None, 0.0001)
+    conv3 = tf.layers.conv2d(pool2, 64, [3, 3], strides = (1, 1), padding = "same",
+                             activation = None, name = 'conv2d_3')
+    conv3_norm = tf.layers.batch_normalization(
+        conv3,
+        #axis = 3,
+        momentum = 0.99,
+        epsilon = 0.001,
+        center = True,
+        scale = True,
+        training = phase,
+        trainable = True
+    )
+    relu3 = tf.nn.relu(conv3_norm)
+    #relu3 = tf.nn.relu(conv3)
+    
+    conv3_1 = tf.layers.conv2d(relu3, 64, [3, 3], strides = (1, 1), padding = "same",
+                             activation = None, name = 'conv2d_3_1')
+    conv3_1_norm = tf.layers.batch_normalization(
+        conv3_1,
+        #axis = 3,
+        momentum = 0.99,
+        epsilon = 0.001,
+        center = True,
+        scale = True,
+        training = phase,
+        trainable = True
+    )
+    relu3_1 = tf.nn.relu(conv3_1_norm)
 
-    fc2 = tf.layers.dense(fc1_norm, 10, name = 'dense_2')
+    pool3 = tf.layers.max_pooling2d(relu3_1, pool_size = [2, 2], strides = 2)
 
-    return fc2
+
+    pool3_flat = tf.reshape(pool3, [-1, 4 * 4 * 64])
+    fc1 = tf.layers.dense(pool3_flat, units = 256, name = 'dense_1')
+    fc1_norm = tf.layers.batch_normalization(
+        fc1,
+        #axis = 3,
+        momentum = 0.99,
+        epsilon = 0.001,
+        center = True,
+        scale = True,
+        training = phase,
+        trainable = True
+    )
+    fc1_relu = tf.nn.relu(fc1_norm)
+    #fc1_relu = tf.nn.relu(fc1)
+
+    fc2 = tf.layers.dense(fc1_relu, units = 128, name = 'dense_2')
+    fc2_norm = tf.layers.batch_normalization(
+        fc2,
+        #axis = 3,
+        momentum = 0.99,
+        epsilon = 0.001,
+        center = True,
+        scale = True,
+        training = phase,
+        trainable = True
+    )
+    fc2_relu = tf.nn.relu(fc2_norm)
+    #fc1_relu = tf.nn.relu(fc1)
+    
+    fc3 = tf.layers.dense(fc2_relu, 10, name = 'dense_3')
+    fc3_norm = tf.layers.batch_normalization(
+        fc3,
+        #axis = 3,
+        momentum = 0.99,
+        epsilon = 0.001,
+        center = True,
+        scale = True,
+        training = phase,
+        trainable = True
+    )
+    fc3_softmax = tf.nn.softmax(fc3_norm)
+    #fc2_softmax = tf.nn.softmax(fc2)
+    
+    return fc3_softmax
 
 def predict(logits):
     """
@@ -95,13 +208,15 @@ def train(logits, labels, learning_rate, l2_regularization, step, train_var):
     :return: training loss and training operation
     """
     loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits = logits, labels = labels))
-    cost = tf.identity(loss)
     tf.cast(loss, dtype = tf.float64)
+    cost = tf.identity(loss)
     if l2_regularization is not None:
-        loss_l2 = tf.reduce_mean([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name])
+        loss_l2 = tf.reduce_mean([tf.nn.l2_loss(v) for v in tf.trainable_variables() if (('bias' not in v.name) and ('batch_normalization' not in v.name))])
         cost = cost + l2_regularization * loss_l2
     optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate)
-    optimizer_step = optimizer.minimize(cost, global_step = step, var_list = train_var)
+    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    with tf.control_dependencies(update_ops):
+        optimizer_step = optimizer.minimize(cost, global_step = step, var_list = train_var)
     return loss, optimizer_step
 
 
@@ -109,12 +224,13 @@ if __name__ == "__main__":
     import cifar10_input
 
     BATCH_SIZE = 256
-    NO_OF_EPOCHS = 1000
-    LEARNING_RATE = 10e-5
-    LAMBDA = 0.5
+    NO_OF_EPOCHS = 1
+    LEARNING_RATE = 10e-2
+    LAMBDA = None #0.05
 
     image = tf.placeholder(tf.uint8)
     label = tf.placeholder(tf.int32)
+    phase = tf.placeholder(tf.bool)
 
     dataset_iterator = cifar10_input.input_dataset(image, label, BATCH_SIZE, NO_OF_EPOCHS)
     data = dataset_iterator.get_next()
@@ -122,7 +238,7 @@ if __name__ == "__main__":
     label_queue = data["label"]
 
     step = tf.train.get_or_create_global_step()
-    logits = dnn(image_queue, 0.0, 1.0)
+    logits = dnn(image_queue, 0.0, 1.0, phase)
     loss, train_step = train(logits, label_queue, LEARNING_RATE, LAMBDA, step, tf.trainable_variables())
     accuracy = old_evaluate(logits, label_queue)
 
@@ -140,20 +256,24 @@ if __name__ == "__main__":
         count = 1
         while True:
             try:
-                loss_value, _, accuracy_value = sess.run([loss, train_step, accuracy])
+                loss_value, _, accuracy_value = sess.run([loss, train_step, accuracy], feed_dict = {phase: True})
                 if count % 100 == 0:
                     print("Step: %6d,\tLoss: %8.4f,\tAccuracy: %0.4f" % (count, loss_value, accuracy_value))
+                    print(sess.run(tf.get_default_graph().get_tensor_by_name('batch_normalization/moving_mean:0')))
                 count += 1
             except tf.errors.OutOfRangeError:
                 break
 
         variables = [v.name for v in tf.trainable_variables()]
         print(variables)
+        print(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES))
+        print(tf.get_collection(tf.GraphKeys.UPDATE_OPS))
 
         cifar10_dataset = cifar10_input.unpickle(path + '/test_batch')
         image_in = cifar10_dataset[b'data']
         label_in = cifar10_dataset[b'labels']
 
         sess.run(dataset_iterator.initializer, feed_dict = {image: image_in, label: label_in})
-        accuracy_value = sess.run(accuracy)
+        accuracy_value = sess.run(accuracy, feed_dict = {phase: False})
         print("Accuracy: ", accuracy_value)
+        print((tf.get_default_graph().get_tensor_by_name('conv2d_1/kernel:0')))

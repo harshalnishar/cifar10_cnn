@@ -24,8 +24,8 @@ if __name__ == "__main__":
     image_queue = data["features"]
     label_queue = data["label"]
 
-    with tf.device('/cpu:0'):
-        logits = cifar10_model.dnn(image_queue, mean, variance)
+    with tf.device('/gpu:0'):
+        logits = cifar10_model.dnn(image_queue, mean, variance, False)
         prediction, probability = cifar10_model.predict(logits)
         _, accuracy = cifar10_model.evaluate(logits, label_queue)
 
@@ -45,3 +45,4 @@ if __name__ == "__main__":
         # prediction_out, probability_out, actual = sess.run([prediction, probability, label_queue])
         # print("Prediction: %d with Probability: %f\nActual: %d" % (prediction_out, probability_out, actual))
         print("Accuracy: %f" % (accuracy.eval()))
+

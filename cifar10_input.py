@@ -29,8 +29,8 @@ def input_dataset(image, label, batch_size, epochs):
     """
 
     dataset_object = tf.data.Dataset.from_tensor_slices({"features": image, "label": label})
-    dataset_object = dataset_object.repeat(epochs)
     dataset_object = dataset_object.shuffle(10000)
+    dataset_object = dataset_object.repeat(epochs)
     dataset_object = dataset_object.batch(batch_size)
     dataset_iterator = dataset_object.make_initializable_iterator()
 
