@@ -20,7 +20,7 @@ def dnn(image, mean, variance, phase):
     image_norm = tf.nn.batch_normalization(image_reshape, mean, variance, None, None, 0.0001)
 
 
-    conv1 = tf.layers.conv2d(image_norm, 16, [5, 5], strides = (1, 1), padding = "same",
+    conv1 = tf.layers.conv2d(image_norm, 32, [3, 3], strides = (1, 1), padding = "same",
                              activation = None, name = 'conv2d_1')
     #mean1, variance1 = tf.nn.moments(pool1, axes = [0, 1, 2])
     conv1_norm = tf.layers.batch_normalization(
@@ -36,7 +36,7 @@ def dnn(image, mean, variance, phase):
     relu1 = tf.nn.relu(conv1_norm)
     #relu1 = tf.nn.relu(conv1)
     
-    conv1_1 = tf.layers.conv2d(relu1, 16, [5, 5], strides = (1, 1), padding = "same",
+    conv1_1 = tf.layers.conv2d(relu1, 32, [3, 3], strides = (1, 1), padding = "same",
                              activation = None, name = 'conv2d_1_1')
     #mean1, variance1 = tf.nn.moments(pool1, axes = [0, 1, 2])
     conv1_1_norm = tf.layers.batch_normalization(
@@ -54,7 +54,7 @@ def dnn(image, mean, variance, phase):
     pool1 = tf.layers.max_pooling2d(relu1_1, pool_size = [2, 2], strides = 2)
 
 
-    conv2 = tf.layers.conv2d(pool1, 32, [5, 5], strides = (1, 1), padding = "same",
+    conv2 = tf.layers.conv2d(pool1, 64, [3, 3], strides = (1, 1), padding = "same",
                              activation = None, name = 'conv2d_2')
     conv2_norm = tf.layers.batch_normalization(
         conv2,
@@ -69,7 +69,7 @@ def dnn(image, mean, variance, phase):
     relu2 = tf.nn.relu(conv2_norm)
     #relu2 = tf.nn.relu(conv2)
 
-    conv2_1 = tf.layers.conv2d(relu2, 32, [3, 3], strides = (1, 1), padding = "same",
+    conv2_1 = tf.layers.conv2d(relu2, 64, [3, 3], strides = (1, 1), padding = "same",
                              activation = None, name = 'conv2d_2_1')
     conv2_1_norm = tf.layers.batch_normalization(
         conv2_1,
@@ -86,7 +86,7 @@ def dnn(image, mean, variance, phase):
     pool2 = tf.layers.max_pooling2d(relu2_1, pool_size = [2, 2], strides = 2)
 
 
-    conv3 = tf.layers.conv2d(pool2, 64, [3, 3], strides = (1, 1), padding = "same",
+    conv3 = tf.layers.conv2d(pool2, 128, [3, 3], strides = (1, 1), padding = "same",
                              activation = None, name = 'conv2d_3')
     conv3_norm = tf.layers.batch_normalization(
         conv3,
@@ -101,7 +101,7 @@ def dnn(image, mean, variance, phase):
     relu3 = tf.nn.relu(conv3_norm)
     #relu3 = tf.nn.relu(conv3)
     
-    conv3_1 = tf.layers.conv2d(relu3, 64, [3, 3], strides = (1, 1), padding = "same",
+    conv3_1 = tf.layers.conv2d(relu3, 128, [3, 3], strides = (1, 1), padding = "same",
                              activation = None, name = 'conv2d_3_1')
     conv3_1_norm = tf.layers.batch_normalization(
         conv3_1,
@@ -118,7 +118,7 @@ def dnn(image, mean, variance, phase):
     pool3 = tf.layers.max_pooling2d(relu3_1, pool_size = [2, 2], strides = 2)
 
 
-    pool3_flat = tf.reshape(pool3, [-1, 4 * 4 * 64])
+    pool3_flat = tf.reshape(pool3, [-1, 4 * 4 * 128])
     fc1 = tf.layers.dense(pool3_flat, units = 256, name = 'dense_1')
     fc1_norm = tf.layers.batch_normalization(
         fc1,

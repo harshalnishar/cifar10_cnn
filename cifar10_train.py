@@ -21,7 +21,7 @@ if __name__ == "__main__":
     INITIAL_LEARNING_RATE = [10e-4]
     DECAY_STEP = 2000
     DECAY_RATE = 0.1
-    LAMBDA = [0.008]
+    LAMBDA = [0.05]
 
     path = './dataset/cifar-10-batches-py'
     filename_list = [(path + '/data_batch_%d' % i) for i in range(1, 6)]
